@@ -5,3 +5,11 @@
 data/
 *.fasta
 *.fa
+
+revcomp
+words
+sort
+hits
+filter
+extend
+gecko

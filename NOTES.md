@@ -47,6 +47,7 @@ Result: ordered stage list in the mapping table below. Steps 3–4 repeat per ke
 - Created revcomp.fut, filter.fut
 - Working on `dev` branch; squash-merge finished stages into `main`
 - Mapped cudagecko kernels and sort calls (see table)
+- revcomp.fut: implemented, futhark test passes (ACGTN → NACGT)
 
 ## Expressiveness
 
