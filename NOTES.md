@@ -8,8 +8,17 @@
 - Hendrix CUDA version: TBD (run `nvidia-smi` on GPU node)
 
 ## Kernel mapping (CUDA → Futhark)
-| cudagecko kernel | Futhark file | Notes |
-|---|---|---|
+| cudagecko kernel | line(s) | Futhark file | Notes |
+|---|---|---|---|
+| kernel_reverse_complement | 280, 306 | revcomp.fut | new file needed |
+| kernel_index_global32 | 455, 571 | words.fut | query, then reference |
+| (library sort call) | TBD | sort.fut | confirm with grep "sort" |
+| kernel_find_leftmost_items | 701 | hits.fut | runs on 1 thread; likely finds start of overlapping key ranges |
+| kernel_hits_load_balancing | 734 | hits.fut | match equal words |
+| kernel_compact_hits | 791 | hits.fut | remove empty slots |
+| kernel_filter_hits_parallel | 916 | filter.fut | new file needed |
+| kernel_frags_forward_register | 993 | extend.fut | extend hits into fragments |
+| (lines 1099–1498) | — | — | repeat of pipeline for reverse strand |
 
 ## Log
 ### 2026-10-01
