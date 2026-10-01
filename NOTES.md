@@ -7,6 +7,23 @@
 - Hendrix GPU model: TBD (run `nvidia-smi` on GPU node)
 - Hendrix CUDA version: TBD (run `nvidia-smi` on GPU node)
 
+
+## Method: finding the stage list
+Source: cudagecko `cuda/` folder, commit d473f03 (gpuhits).
+
+1. `grep -n "<<<" gpu_cuda_workflow.cu`
+   - `<<<` marks every CUDA kernel launch, so the output lists all GPU stages in execution order.
+2. `grep -n "sort" gpu_cuda_workflow.cu`
+   - Sorting runs through a library call (moderngpu `mergesort`), not a `<<<` launch, so step 1 missed the sort stages.
+3. `grep -n "kernel_reverse_complement" kernels.cu`
+   - Finds the line where each kernel's code starts, so the kernel body can be read for porting.
+4. `sed -n '1186,1230p' kernels.cu`
+   - Prints only the kernel body (lines 1186–1230), avoiding reading the full file.
+
+Result: ordered stage list in the mapping table below. Steps 3–4 repeat per kernel, with the kernel name and line range changed.
+
+
+
 ## Kernel mapping (CUDA → Futhark)
 | cudagecko kernel | line(s) | Futhark file | Notes |
 |---|---|---|---|
