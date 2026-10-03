@@ -3,7 +3,7 @@
 -- other characters (including lowercase) count as A;
 -- cudagecko's `offset` (chunk start) is 0 here: no chunking
 --
--- Test 1: 32×A then C → base 31 lands in bits 62–63
+-- Test 1: 32×A then C → base 31 lands in bits 62-63
 -- Test 2: 32×A then N → word with N is invalid (all ones)
 -- ==
 -- input  { [65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,
@@ -22,7 +22,7 @@ def base_code (c: u8) :  u64 =
   else 0
 
 
--- | Hash and position of the 32-base word starting at position i
+-- | Hash and position of the 32-base word, starting at position i
 -- Words containing 'N' return all ones for both values
 def word_at [n] (s: [n]u8) (i: i64) : (u64, u32) =
   let (hash, bad) =
@@ -34,7 +34,7 @@ def word_at [n] (s: [n]u8) (i: i64) : (u64, u32) =
 
 
 -- | Hashes and positions of all words in s
--- Number of words = n - 31 (no word starts in the last 31 positions)
+-- Number of words = n - 31 (no word starts within the last 31 positions)
 def words [n] (s: [n]u8) : ([]u64, []u32) =
   unzip (map (word_at s) (iota (i64.max 0 (n - 31))))
 
