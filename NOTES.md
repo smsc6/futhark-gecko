@@ -1,5 +1,6 @@
 # NOTES — GECKO in Futhark
 
+
 ## Environment (reproducibility)
 - cudagecko: commit d473f03, branch gpuhits (matches paper ref [27])
 - Futhark: 0.25.24
@@ -12,13 +13,13 @@
 Source: cudagecko `cuda/` folder, commit d473f03 (gpuhits).
 
 1. `grep -n "<<<" gpu_cuda_workflow.cu`
-   - `<<<` marks every CUDA kernel launch, so the output lists all GPU stages in execution order.
+   - `<<<` marks every CUDA kernel launch, so the output lists all GPU stages in execution order
 2. `grep -n "sort" gpu_cuda_workflow.cu`
-   - Sorting runs through a library call (moderngpu `mergesort`), not a `<<<` launch, so step 1 missed the sort stages.
+   - Sorting runs through a library call (moderngpu `mergesort`), not a `<<<` launch, so step 1 missed the sort stages
 3. `grep -n "kernel_reverse_complement" kernels.cu`
-   - Finds the line where each kernel's code starts, so the kernel body can be read for porting.
+   - Finds the line where each kernel's code starts, so the kernel body can be read for porting
 4. `sed -n '1186,1230p' kernels.cu`
-   - Prints only the kernel body (lines 1186–1230), avoiding reading the full file.
+   - Prints only the kernel body (lines 1186–1230), avoiding reading the full file
 
 Result: ordered stage list in the mapping table below. Steps 3–4 repeat per kernel, with the kernel name and line range changed.
 
@@ -51,9 +52,13 @@ Result: ordered stage list in the mapping table below. Steps 3–4 repeat per ke
 
 ## Expressiveness
 
+
 ## Correctness
+- words.fut: 2 hand-calculated tests (bit position of base 31; N → invalid). Not yet compared to cudagecko output.
+
 
 ## Performance
 - cudagecko prints per-stage timings ([INFO] lines) → compare per stage
+
 
 ## Compiler limitations
