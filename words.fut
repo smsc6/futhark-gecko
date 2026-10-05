@@ -5,6 +5,7 @@
 --
 -- Test 1: 32×A then C → base 31 lands in bits 62-63
 -- Test 2: 32×A then N → word with N is invalid (all ones)
+-- ******MORE TESTS******
 -- ==
 -- input  { [65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,
 --           65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,65u8,67u8] }
@@ -16,7 +17,7 @@
 
 -- | 2-bit code of one base - characters other than C, G, T give 0 (same as A)
 def base_code (c: u8) :  u64 =
-  if      c == 'C' then 1
+  if c == 'C' then 1
   else if c == 'G' then 2
   else if c == 'T' then 3
   else 0
@@ -35,9 +36,9 @@ def word_at [n] (s: [n]u8) (i: i64) : (u64, u32) =
 
 -- | Hashes and positions of all words in s
 -- Number of words = n - 31 (no word starts within the last 31 positions)
-def words [n] (s: [n]u8) : ([]u64, []u32) =
-  unzip (map (word_at s) (iota (i64.max 0 (n - 31))))
+def words [n] (s: [n]u8) : ([]u64, []u32) = 
+unzip (map (word_at s) (iota (i64.max 0 (n - 31))))
 
 
 -- | Entry point for futhark test and benchmarking
-entry main (s: []u8) : ([]u64, []u32) = words s
+entry main (s: []u8) : ([]u64, []u32)= words s

@@ -1,5 +1,5 @@
 -- REVERSE COMPLEMENT of a DNA sequence
--- done first for dependencies (words requires revcomp), pipeline order
+-- Written/ tested first for dependencies (words requires revcomp), match cudagecko pipeline order
 -- MATCHES: cudagecko kernel_reverse_complement (kernels.cu, line 1186):
 -- A<->T, C<->G, any other character -> N
 -- 
@@ -9,9 +9,9 @@
 
 
 -- | Complement of one DNA base: A<->T, C<->G
--- Any other cahracter (lowercase, N, other) becomes 'N', matchign cudagecko
+-- Any other cahracter (lowercase, N, other) becomes 'N', matching cudagecko
 def complement (c: u8) : u8 =
-  if      c == 'A' then 'T'
+  if c == 'A' then 'T'
   else if c == 'C' then 'G'
   else if c == 'G' then 'C'
   else if c == 'T' then 'A'

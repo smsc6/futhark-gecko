@@ -2,6 +2,7 @@
 -- Corresponds to cudagecko's moderngpu mergesort calls (gpu_cuda_workflow.cu lines 489, 601, 1125, 892, 1406)
 -- Radix sort is stable like mergesort: equal keys keep their input order
 -- Invalid words (hash all ones) sort to the end, as in cudagecko
+-- 
 -- Test 1:  words, equal hashes (1, 1) keep position order 11, then 13
 -- Test 2: hits, plain ascending sort
 -- ******MORE TESTS******
@@ -22,7 +23,7 @@ import "lib/github.com/diku-dk/sorts/radix_sort"
 
 -- | Sort words by hash, carrying each word's position along
 def sort_words [n] (hashes: [n]u64) (positions: [n]u32) : ([n]u64, [n]u32) =
-  zip hashes positions
+  zip hashes positions  -- ******** REVIEW ******
   |> radix_sort_by_key (.0) u64.num_bits u64.get_bit
   |> unzip
 
