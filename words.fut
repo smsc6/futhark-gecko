@@ -15,7 +15,7 @@
 -- output { [0u64, 18446744073709551615u64] [0u32, 4294967295u32] }
 
 
--- | 2-bit code of one base - characters other than C, G, T give 0 (same as A)
+-- | 2-bit code of on base - characters other than C, G, T give 0 (same as A)
 def base_code (c: u8) :  u64 =
   if c == 'C' then 1
   else if c == 'G' then 2
@@ -23,7 +23,7 @@ def base_code (c: u8) :  u64 =
   else 0
 
 
--- | Hash and position of the 32-base word, starting at position i
+-- |  Hash and position of the 32-base word, starting at position i
 -- Words containing 'N' return all ones for both values
 def word_at [n] (s: [n]u8) (i: i64) : (u64, u32) =
   let (hash, bad) =
