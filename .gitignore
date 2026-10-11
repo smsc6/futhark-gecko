@@ -13,3 +13,6 @@ hits
 filter
 extend
 gecko
+
+\?/
+.scala-build/
