@@ -15,4 +15,4 @@ extend
 gecko
 
 \?/
-.scala-build/
+.scala-build/benchmarks/
