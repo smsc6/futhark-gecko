@@ -49,7 +49,7 @@ object Hits:
   //Futhark port: zip and filter port directly
   // Futhark port: flatMap does NOT port, because a map cannot return arrays of different lengths
   // Futhark REPLACEMET: map gives each word's count (hi - lo), an exclusive scan gives each word's
-  // output offset, then expand (as discussed) OR scan + scatter + scan builds the flat array
+  // output offset, then EXPAND (as discussed) OR scan + scatter + scan builds the flat array
   // Futhark: expand's size function 
   def hits(qh: Vector[Long], qp: Vector[Long], rh: Vector[Long], rp: Vector[Long], refLen: Long): Vector[Long] =
     qh.zip(qp)
