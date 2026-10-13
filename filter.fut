@@ -1,14 +1,15 @@
--- Filter: remove overlapping hits on the same diagonal
+-- FILTER STAGE: remove overlapping hits on the same diagonal
+--
 -- Matches cudagecko kernel_filter_hits_parallel (kernels.cu, line 70)
 -- and the CPU step filter_hits_cpu (cpu_functions.c, line 469)
+--
 -- Hits are processed in fixed groups of 32 (one CUDA warp in cudagecko)
--- A hit is removed if an earlier kept hit in the same group has the same diagonal
--- and the hit's query position is less than that hit's position + 63
--- Hits in different groups are never compared, matching cudagecko
--- Output: query positions x and reference positions y of kept hits
+-- A hit is removed if an earlier kept hit in the same group has the same diagonal and the hit's query position is less than that hit's position + 63
+-- Hits in different groups are never compared (matching cudagecko)
+-- Output: query positions x and reference  positions y of kept hits
 --
 --
--- Test 1: diagonal 105 positions 10, 50, 73, 80 keep 10 and 73; diagonal 110 position 20 kept
+-- Test 1: diagonal 105 positions 10, 50, 73, 80 keep 10 and 73, diagonal 110 position 20 kept
 -- Test 2: 33 hits on one diagonal, positions 0-32: hit 0 kept, hit 32 kept because it starts a new group
 -- ==
 -- entry: filter_main
@@ -19,8 +20,8 @@
 
 
 -- | Keep flags for one group of up to 32 hits starting at index lo
--- Hit j is removed if any earlier kept hit i has the same diagonal and px[j] < px[i] + 63
--- u32 addition wraps on overflow, same as cudagecko
+-- Hit j is removed if any earlier kept hit i has the same diagonal, and px[j]< px[i] + 63
+-- u32 addition wraps on overflow, matching cudagecko
 def filter_group [n] (d: [n]u32) (px: [n]u32) (lo: i64)  (len: i64) : [32]bool =
   loop kept = replicate 32 false
   for j < len do
@@ -45,10 +46,13 @@ def filter_hits [n] (hits: [n]u64) (ref_len: u32) : ([]u32, []u32) =
     |> flatten
     |> take n
 
-  -- reference position y = ref_len + x - diagonal, same as cudagecko
+
+  -- reference position - same as cudagecko
   let py = map2 (\x dd -> ref_len + x - dd) px d
 
-  -- filter_hits_cpu also drops hits with x or y equal to all ones
+
+
+  -- Drop hits with x or y equal to all ones (filter_hits_cpu also )
   let ok = map3 (\k x y -> k && x < u32.highest && y < u32.highest) kept px py
   in zip3 ok px py
      |> filter (.0)
@@ -57,6 +61,6 @@ def filter_hits [n] (hits: [n]u64) (ref_len: u32) : ([]u32, []u32) =
 
 
 
--- | Entry point for futhark test and benchmarking
+-- | Entry point for futhark test & benchmarking
 entry filter_main [n] (hits: [n]u64) (ref_len: u32) : ([]u32, []u32) =
   filter_hits hits ref_len
