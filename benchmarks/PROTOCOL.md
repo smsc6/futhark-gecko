@@ -64,3 +64,9 @@ The `t=` stage times include data copying, not only GPU computation:
 - `words Q` (lines 417–466): query copy CPU→GPU, clearing the full words buffer (`cudaMemset`, sized for the maximum word count, not the sequence length), words kernel.
 - `sortwords Q` (lines 486–501): GPU sort (`mergesort`), sorted keys and values copied GPU→CPU.
 Consequence: these times cannot be compared directly to Futhark kernel times. Candidate method: measure cudagecko kernels alone with NVIDIA Nsight Systems (`nsys`).
+
+## Kernel-only timing with nsys
+- `nsys profile --stats=true` (NVIDIA Nsight Systems, included in module `cuda/11.8`) reports each GPU kernel's and each copy's time separately (job 3705).
+- cudagecko's built-in stage timers are dominated by memory clearing: `[CUDA memset]` took 13.5 ms and cleared 8.1 GB in job 3705.
+- Sort kernels (ModernGPU, `mgpu::...`) sort both words and hits; separate them by execution order with `nsys stats --report gputrace`.
+- `--gres=gpu:1` assigned a Titan RTX (job 3625) and a Quadro RTX 6000 (job 3705): official runs must request one named GPU type.
