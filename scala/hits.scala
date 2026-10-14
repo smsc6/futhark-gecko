@@ -1,6 +1,6 @@
 // HITS IN SCALA: every pair of equal words between the query and the reference
 //
-// Irregular step: each query word produces a different number of hits (flatMap)
+// IRREGULAR STEP: each query word produces a different number of hits (flatMap)
 // Matched hit encoding to cudagecko: ((refLen + x - y) << 32) + x, wrapping 64-bit 
 // cudagecko hashes are unsigned 64-bit; Scala Long is signed, so comparisons use compareUnsigned
 // Invalid words: all ones, stored as -1L in a Long
@@ -10,11 +10,11 @@
 // Tests: scala-cli run --server=false hits.scala
 
 object Hits:
-  // Futhark translation: u64.highest
-  val Invalid: Long = -1L
+  // Futhark translation: u64.highest, needs no -1 workaround
+  val Invalid: Long = -1L // cudagecko marks invalid words w all 64 bits set to 1 - in Long, this reads as -1
 
-  // Index of the first element >= k in sorted xs, unsigned order (if none, xs.length)
-  // Futhark tranlsation: ports directly,  each binary search runs sequentially inside one parallel task
+  // binary search in the sorted reference hashes for the first position ≥ k, where matches for k start
+  // Futhark tranlsation: same algorithm; recursive go --> loop, compareUnsigned becomes a plain < on u64
   def lowerBound(xs: Vector[Long], k: Long): Int =
     @annotation.tailrec
     def go(lo: Int, hi: Int): Int =
@@ -25,7 +25,7 @@ object Hits:
     go(0, xs.length)
 
   // Index of the first element > k in sorted xs, unsigned order (xs.length if none)
-  // Futhark: ports directly, same as lower Bound
+  // Futhark: same as previous lower bound
   def upperBound(xs: Vector[Long], k: Long): Int =
     @annotation.tailrec
     def go(lo: Int, hi: Int): Int =
@@ -36,8 +36,8 @@ object Hits:
     go(0, xs.length)
 
 
-  // 64-bit hit value, same encoding as cudagecko
-  // Futhark tranlsaiton: direct port - u64 arithmetic wraps the same way
+  // 64-bit hit value, same encoding as cudagecko (packs one hit into one number)
+  // Futhark tranlsaiton: direct port - u64 arithmetic wraps the same way. COnvert positions stored as u32 with u64.u32
   def hitValue(refLen: Long, x: Long, y: Long): Long =
     ((refLen + x - y) << 32) + x
 
@@ -49,8 +49,7 @@ object Hits:
   //Futhark port: zip and filter port directly
   // Futhark port: flatMap does NOT port, because a map cannot return arrays of different lengths
   // Futhark REPLACEMET: map gives each word's count (hi - lo), an exclusive scan gives each word's
-  // output offset, then EXPAND (as discussed) OR scan + scatter + scan builds the flat array
-  // Futhark: expand's size function 
+  // output offset, then EXPAND (as discussed) builds flat array
   def hits(qh: Vector[Long], qp: Vector[Long], rh: Vector[Long], rp: Vector[Long], refLen: Long): Vector[Long] =
     qh.zip(qp)
       .filter((h, _) => h != Invalid)
