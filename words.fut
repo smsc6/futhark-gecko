@@ -25,19 +25,27 @@ def base_code (c: u8) :  u64 =
 
 -- |  Hash and position of the 32-base word, starting at position i
 -- Words containing 'N' return all ones for both values
-def word_at [n] (s: [n]u8) (i: i64) : (u64, u32) =
+-- Position = i + offset (offset is the batch start in the whole sequence, as in cudagecko)
+def word_at [n] (s: [n]u8) (offset: i64) (i: i64) : (u64, u32) =
   let (hash, bad) =
     loop (hash, bad) = (0u64, false) for k < 32 do
       let c = s[i + k]
       in (hash | (base_code c << (2 * u64.i64 k)), bad ||c == 'N')
   in if bad then (u64.highest, u32.highest)
-     else (hash, u32.i64 i)
+     else (hash, u32.i64 (i + offset))
+
+
+-- | Hashes and positions of all words in one batch s (a slice of the whole sequence)
+-- offset: position of s[0] in the whole sequence, so positions are absolute
+-- Number of words = n - 31 (no word crosses the batch end, as in cudagecko)
+def words_batch [n] (s: [n]u8) (offset: i64) : ([]u64, []u32) =
+  unzip (map (word_at s offset) (iota (i64.max 0 (n - 31))))
 
 
 -- | Hashes and positions of all words in s
 -- Number of words = n - 31 (no word starts within the last 31 positions)
 def words [n] (s: [n]u8) : ([]u64, []u32) = 
-unzip (map (word_at s) (iota (i64.max 0 (n - 31))))
+  words_batch s 0
 
 
 -- | Entry point for futhark test and benchmarking

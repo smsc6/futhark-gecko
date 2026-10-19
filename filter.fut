@@ -34,7 +34,7 @@ def filter_group [n] (d: [n]u32) (px: [n]u32) (lo: i64)  (len: i64) : [32]bool =
 
 -- | Remove overlapping hits, split ketp hits into query, and reference positions
 -- Input: hits sorted by diagonal, encoded as (diagonal<< 32) + x
-def filter_hits [n] (hits: [n]u64) (ref_len: u32) : ([]u32, []u32) =
+def filter_hits [n] (hits: [n]u64) (ref_len: u32) : ?[k].([k]u32, [k]u32) =
   let d = map (\v -> u32.u64 (v >> 32)) hits
   let px = map (\v -> u32.u64 v) hits
   let groups = (n + 31) / 32
