@@ -33,6 +33,7 @@ The summaries from the report's own runs are in `results/`.
 | `runs/scripts/` | the exact SLURM scripts of the jobs reported |
 | `results/` | small result summaries from those jobs |
 | `benchmarks/PROTOCOL.md` | benchmark protocol and decisions |
+| `prototypes/scala/` | Scala prototype used to design the high-level formulation of hits and extend before the Futhark version (not used for results) |
 
 ## Notes
 

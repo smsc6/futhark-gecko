@@ -85,11 +85,11 @@ Consequence: these times cannot be compared directly to Futhark kernel times. Ca
 - Reference arrays from ~/gecko/cudagecko-validation-copy (writes reverse complement and sorted query words to files)
 - Mycoplasma pair, 2026-10-13 (jobs 3788 and 3807): revcomp identical; words + sort identical except 30 words
 - The 30 words are the last word positions of the query; futhark's hashes match hashes recomputed from the sequence, cudagecko's do not (cudagecko bug: kernel_index_global32 threads exit before filling shared memory, so the last block reads never-written bases; see runs/results/2026-10-13_validation_diagnosis_mycoplasma_3807_vs_3788.txt)
-- futhark words.fut returns n - 31 words; cudagecko sorts n entries, the extra 31 are all ones (confirmed)
+- futhark/words.fut returns n - 31 words; cudagecko sorts n entries, the extra 31 are all ones (confirmed)
 - Pass criterion: identical output, apart from documented cudagecko differences
 - E. coli pair, 2026-10-13 (job 3893): revcomp identical; words + sort identical except 15 words
 - tools/check_end_of_sequence_words.py predicts the words affected by the cudagecko bug from the kernel's block layout (last block start = 64 * floor((n - 32) / 64); affected word starts max(last block start, n - 62) to n - 32); E. coli: predicted 15, observed exactly these 15, futhark matches the sequence for all
-- Validation result: revcomp.fut, words.fut and sort.fut correct on both pairs; all differences explained by the cudagecko end-of-sequence bug
+- Validation result: futhark/revcomp.fut, futhark/words.fut and futhark/sort.fut correct on both pairs; all differences explained by the cudagecko end-of-sequence bug
 - cudagecko hit counts vary between runs on identical input (Mycoplasma jobs 3625, 3705, 3788, 5001: forward hits 486,866 to 551,788); final alignment counts nearly stable. Validation therefore feeds each futhark stage the exact input cudagecko's stage received in the same run
 
 ## cudagecko hits kernel: duplicate hits (bug 2), found 2026-10-19
@@ -102,7 +102,7 @@ Consequence: these times cannot be compared directly to Futhark kernel times. Ca
 - Report with every benchmark: cudagecko's hit count (including duplicates) next to futhark-gecko's, since the extra hits are extra work
 - See runs/results/2026-10-19_hits_diagnosis_mycoplasma-trimmed.txt
 - Bug 3 (same kernel): cudagecko skips matches when a run of equal reference hashes straddles a 32-word chunk boundary (reference start pointer moved past the run start); trimmed Mycoplasma: 81 missed real hits from 64 query words; futhark finds them
-- End-to-end validation (job 4225, trimmed Mycoplasma pair): gecko.fut identical to cudagecko with bugs 2 and 3 fixed, both strands (kept hits and extension offsets)
-- End-to-end validation (job 4234, trimmed E. coli pair): gecko.fut identical to cudagecko with bugs 2 and 3 fixed, both strands
-- End-to-end validation after adding the batch loop (job 4362, trimmed E. coli pair, one batch): gecko.fut identical to job 4234, both strands
+- End-to-end validation (job 4225, trimmed Mycoplasma pair): futhark/gecko.fut identical to cudagecko with bugs 2 and 3 fixed, both strands (kept hits and extension offsets)
+- End-to-end validation (job 4234, trimmed E. coli pair): futhark/gecko.fut identical to cudagecko with bugs 2 and 3 fixed, both strands
+- End-to-end validation after adding the batch loop (job 4362, trimmed E. coli pair, one batch): futhark/gecko.fut identical to job 4234, both strands
 - Batched end-to-end validation (job 4430, trimmed E. coli pair, 3 batches per sequence, batch size 1,999,583 = cudagecko -ram 344807544): gecko_batched identical to cudagecko with bugs 2 and 3 fixed, both strands; input 2 bases shorter than the trimmed files so every batch is full 64-word blocks (avoids bug 1)
