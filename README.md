@@ -25,7 +25,7 @@ The summaries from the report's own runs are in `results/`.
 
 | Path | Contents |
 |---|---|
-| `futhark/` | Futhark implementation: `revcomp.fut`, `words.fut`, `sort.fut`, `hits.fut`, `filter.fut`, `extend.fut`, one file per stage | one file per pipeline stage |
+| `futhark/` | Futhark implementation: `revcomp.fut`, `words.fut`, `sort.fut`, `hits.fut`, `filter.fut`, `extend.fut`, one file per stage |
 | `futhark/gecko.fut` | full pipeline; entry points `gecko` (one batch) and `gecko_batched` |
 | `futhark/futhark.pkg`, `futhark/lib/` | Futhark packages (`sorts`, `segmented`) |
 | `tools/` | input preparation, comparison with cudagecko, result summaries |
