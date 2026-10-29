@@ -1,0 +1,57 @@
+diff -ruN -x .git -x bin -x '*.o' /home/cgf146/gecko/cudagecko/README_bugfixed_build.md /home/cgf146/gecko/cudagecko-bugfixed/README_bugfixed_build.md
+--- /home/cgf146/gecko/cudagecko/README_bugfixed_build.md	1970-01-01 01:00:00.000000000 +0100
++++ /home/cgf146/gecko/cudagecko-bugfixed/README_bugfixed_build.md	2026-10-19 14:22:01.124520000 +0200
+@@ -0,0 +1,17 @@
++# cudagecko bug-fixed build (for benchmarking)
++
++Purpose: benchmark build of cudagecko doing the same work as futhark-gecko; compared alongside the original cudagecko
++Not for validation output: no file-writing code (the validation copy is ~/gecko/cudagecko-validation-copy)
++
++## Origin
++Copied from ~/gecko/cudagecko on 2026-10-19 with cp -r
++
++## Changes (cuda/kernels.cu, kernel_hits_load_balancing only), marked BUGFIXED BUILD
++1. Bug 2: job ranges; jobs 0 to G/2 keep size B, every later job starts at (G/2 + 1) * B + (job - G/2 - 1) * B/2 with size B/2 (original half-size ranges overlapped full-size ones, so some query words were processed twice)
++2. Bug 3: removed word_y_id = current_word_y_id in the break branch (original skipped matches before a 32-word chunk boundary)
++Same edits as the validation copy (changes 8 and 9 in its README); gpu_cuda_workflow.cu unchanged from the original
++
++## Build
++Modules: cuda/11.8, gcc/11.2.0
++Command: make gpu_cuda_workflow (in cuda/), built 2026-10-19 on hendrixgate04fl
++Binary: bin/gpu_cuda_workflow
+diff -ruN -x .git -x bin -x '*.o' /home/cgf146/gecko/cudagecko/cuda/kernels.cu /home/cgf146/gecko/cudagecko-bugfixed/cuda/kernels.cu
+--- /home/cgf146/gecko/cudagecko/cuda/kernels.cu	2026-10-01 15:58:32.608025000 +0200
++++ /home/cgf146/gecko/cudagecko-bugfixed/cuda/kernels.cu	2026-10-19 14:21:48.333618000 +0200
+@@ -235,8 +235,9 @@
+     uint32_t real_start_x = my_job * batch_size;
+     uint32_t real_limit_x = (my_job + 1) * batch_size;
+     if(blockIdx.x > gridDim.x/2){
+-        real_start_x = my_job * batch_size/2;
+-        real_limit_x = (my_job + 1) * batch_size/2;
++        // BUGFIXED BUILD: job ranges fixed so half-size jobs start after the full-size ones (original overlapped)
++        real_start_x = (gridDim.x/2 + 1) * batch_size + (my_job - (gridDim.x/2 + 1)) * (batch_size/2);
++        real_limit_x = real_start_x + batch_size/2;
+     }
+ 
+     //if(blockIdx.x == 0 && threadIdx.x == 0) printf("Batch size is :::::: %u\n", batch_size);
+@@ -328,7 +329,7 @@
+                     {
+                         if(current_word_x < blockDim.x-1 && cached_keys_x[current_word_x+1] > cached_keys_x[current_word_x]
+                             && cached_keys_x[current_word_x+1] >= cached_keys_y[0]){
+-                                word_y_id = current_word_y_id;
++                                // BUGFIXED BUILD: bug 3 fix, start pointer not moved here (original skipped matches before a chunk boundary)
+                             }
+                         break;
+                     }
+@@ -354,8 +355,9 @@
+         
+         // Update job index
+         if(my_job > gridDim.x/2){
+-            real_start_x = gridDim.x/2 * batch_size + (my_job-gridDim.x) * batch_size/2;
+-            real_limit_x = gridDim.x/2 * batch_size + ((my_job+1)-gridDim.x) * batch_size/2;
++            // BUGFIXED BUILD: same job-range formula as the first job (original overlapped)
++            real_start_x = (gridDim.x/2 + 1) * batch_size + (my_job - (gridDim.x/2 + 1)) * (batch_size/2);
++            real_limit_x = real_start_x + batch_size/2;
+         }else{
+             real_start_x = my_job * batch_size;
+             real_limit_x = (my_job + 1) * batch_size;

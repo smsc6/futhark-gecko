@@ -45,6 +45,8 @@ Source: GPUGECKO paper, Supplementary Material, Table 4. Files on Hendrix in `~/
 ## Repetitions
 - Per pair, per program: 1 warm-up run (discarded) + 10 timed runs
 - Report mean and standard deviation per stage
+- Outputs are not kept: human vs gorilla chr1 writes a 23 GB cudagecko CSV and 14 GB of Futhark output per run (job 4454), so 11 runs per program would fill the disk
+- Each run: Futhark output to /dev/null; cudagecko CSV deleted after the run (outside the timed region)
 
 ## Correctness before timing
 Futhark output for each stage must match cudagecko output on the same input before timings are compared.
@@ -55,8 +57,9 @@ Futhark output for each stage must match cudagecko output on the same input befo
 - Run records: `~/gecko/runs/README.md`
 
 ## Open decisions
-- GPU type: A100 or Titan RTX
-- Timing scope: include or exclude CPU-to-GPU data transfer
+- GPU type (decided): A100 (NVIDIA A100-PCIE-40GB in job 4454), all runs in one SLURM job
+- Timing scope (decided): cudagecko = sum of its built-in stage timers, filterFrags (CPU step) excluded, data copies included (tools/sum_cudagecko_stage_times.py); Futhark = executable -t time, which excludes copying input to the GPU and results back (gecko.c generated code: futhark_new_u8_1d and sync before t_start, results read after t_end) and includes the whole GPU pipeline and all batches; report both scopes, per supervisor
+- Difference to report: Futhark keeps all batches on the GPU; cudagecko copies data between CPU and GPU in every batch
 
 ## cudagecko built-in timers (from `cuda/gpu_cuda_workflow.cu`, SHOWTIME)
 The `t=` stage times include data copying, not only GPU computation:

@@ -16,3 +16,8 @@ gecko
 
 \?/
 .scala-build/benchmarks/
+
+# Futhark build outpu
+*.actual
+*.expected
+ 

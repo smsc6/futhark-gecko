@@ -1,0 +1,9 @@
+futhark folder: /home/cgf146/gecko/runs/results/2026-10-19_futhark-gecko-pipeline-vs-bugfixes_mycoplasma-trimmed_anygpu_4225
+cudagecko folder: /home/cgf146/gecko/runs/results/2026-10-19_cudagecko-validation-copy-bugfixes_mycoplasma-trimmed_anygpu_ram-4GB_4225
+== forward strand
+kept hits: futhark 16822, cudagecko 16822
+RESULT: identical
+== reverse strand
+kept hits: futhark 7046, cudagecko 7046
+RESULT: identical
+== Summary: forward PASS, reverse PASS

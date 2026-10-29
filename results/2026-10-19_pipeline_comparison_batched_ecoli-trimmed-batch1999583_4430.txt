@@ -1,0 +1,9 @@
+futhark folder: /home/cgf146/gecko/runs/results/2026-10-19_futhark-gecko-pipeline-batched_ecoli-trimmed-batch1999583_anygpu_4430
+cudagecko folder: /home/cgf146/gecko/runs/results/2026-10-19_cudagecko-validation-copy-batched_ecoli-trimmed-batch1999583_anygpu_ram-344807544_4430
+== forward strand
+kept hits: futhark 130834, cudagecko 130834
+RESULT: identical
+== reverse strand
+kept hits: futhark 14231, cudagecko 14231
+RESULT: identical
+== Summary: forward PASS, reverse PASS

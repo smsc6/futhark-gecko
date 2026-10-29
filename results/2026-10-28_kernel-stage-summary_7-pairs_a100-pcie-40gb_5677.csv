@@ -1,0 +1,92 @@
+pair,program,stage,kernel_time_s
+mycoplasma,cudagecko-original,extend,0.003848
+mycoplasma,cudagecko-original,filter,0.000051
+mycoplasma,cudagecko-original,hit sort,0.000552
+mycoplasma,cudagecko-original,hits,0.001904
+mycoplasma,cudagecko-original,revcomp,0.000043
+mycoplasma,cudagecko-original,word sort,0.001304
+mycoplasma,cudagecko-original,words,0.000238
+mycoplasma,cudagecko-original,total,0.007939
+mycoplasma,futhark-gecko,extend,0.006992
+mycoplasma,futhark-gecko,hit sort,0.006619
+mycoplasma,futhark-gecko,other,0.003161
+mycoplasma,futhark-gecko,word sort,0.022054
+mycoplasma,futhark-gecko,total,0.038826
+ecoli,cudagecko-original,extend,0.016680
+ecoli,cudagecko-original,filter,0.000220
+ecoli,cudagecko-original,hit sort,0.001371
+ecoli,cudagecko-original,hits,0.007174
+ecoli,cudagecko-original,revcomp,0.000087
+ecoli,cudagecko-original,word sort,0.005005
+ecoli,cudagecko-original,words,0.001100
+ecoli,cudagecko-original,total,0.031638
+ecoli,futhark-gecko,extend,0.029059
+ecoli,futhark-gecko,hit sort,0.026480
+ecoli,futhark-gecko,other,0.009163
+ecoli,futhark-gecko,word sort,0.088186
+ecoli,futhark-gecko,total,0.152889
+gallus-meleagris,cudagecko-original,extend,0.001098
+gallus-meleagris,cudagecko-original,filter,0.000082
+gallus-meleagris,cudagecko-original,hit sort,0.000700
+gallus-meleagris,cudagecko-original,hits,0.017136
+gallus-meleagris,cudagecko-original,revcomp,0.000157
+gallus-meleagris,cudagecko-original,word sort,0.011039
+gallus-meleagris,cudagecko-original,words,0.002634
+gallus-meleagris,cudagecko-original,total,0.032845
+gallus-meleagris,futhark-gecko,extend,0.001406
+gallus-meleagris,futhark-gecko,hit sort,0.008724
+gallus-meleagris,futhark-gecko,other,0.016274
+gallus-meleagris,futhark-gecko,word sort,0.198945
+gallus-meleagris,futhark-gecko,total,0.225350
+oryzias-danio,cudagecko-original,extend,0.010269
+oryzias-danio,cudagecko-original,filter,0.004141
+oryzias-danio,cudagecko-original,hit sort,0.034854
+oryzias-danio,cudagecko-original,hits,0.373740
+oryzias-danio,cudagecko-original,revcomp,0.000444
+oryzias-danio,cudagecko-original,word sort,0.033385
+oryzias-danio,cudagecko-original,words,0.006516
+oryzias-danio,cudagecko-original,total,0.463349
+oryzias-danio,futhark-gecko,extend,0.023968
+oryzias-danio,futhark-gecko,hit sort,0.581763
+oryzias-danio,futhark-gecko,other,0.071737
+oryzias-danio,futhark-gecko,word sort,0.509509
+oryzias-danio,futhark-gecko,total,1.186977
+sus-bos,cudagecko-original,extend,0.008863
+sus-bos,cudagecko-original,filter,0.001021
+sus-bos,cudagecko-original,hit sort,0.005637
+sus-bos,cudagecko-original,hits,0.211475
+sus-bos,cudagecko-original,revcomp,0.001028
+sus-bos,cudagecko-original,word sort,0.196163
+sus-bos,cudagecko-original,words,0.029560
+sus-bos,cudagecko-original,total,0.453747
+sus-bos,futhark-gecko,extend,0.017616
+sus-bos,futhark-gecko,hit sort,0.126828
+sus-bos,futhark-gecko,other,0.252742
+sus-bos,futhark-gecko,word sort,2.868836
+sus-bos,futhark-gecko,total,3.266022
+human-mouse-chrX,cudagecko-original,extend,0.250763
+human-mouse-chrX,cudagecko-original,filter,0.041269
+human-mouse-chrX,cudagecko-original,hit sort,0.323416
+human-mouse-chrX,cudagecko-original,hits,1.432750
+human-mouse-chrX,cudagecko-original,revcomp,0.001897
+human-mouse-chrX,cudagecko-original,word sort,0.586544
+human-mouse-chrX,cudagecko-original,words,0.082688
+human-mouse-chrX,cudagecko-original,total,2.719326
+human-mouse-chrX,futhark-gecko,extend,0.587370
+human-mouse-chrX,futhark-gecko,hit sort,5.956515
+human-mouse-chrX,futhark-gecko,other,1.093729
+human-mouse-chrX,futhark-gecko,word sort,8.465173
+human-mouse-chrX,futhark-gecko,total,16.102786
+human-gorilla-chr1,cudagecko-original,extend,1.347056
+human-gorilla-chr1,cudagecko-original,filter,0.129782
+human-gorilla-chr1,cudagecko-original,hit sort,1.015568
+human-gorilla-chr1,cudagecko-original,hits,27.738442
+human-gorilla-chr1,cudagecko-original,revcomp,0.002529
+human-gorilla-chr1,cudagecko-original,word sort,1.314515
+human-gorilla-chr1,cudagecko-original,words,0.252068
+human-gorilla-chr1,cudagecko-original,total,31.799960
+human-gorilla-chr1,futhark-gecko,extend,2.884621
+human-gorilla-chr1,futhark-gecko,hit sort,19.650995
+human-gorilla-chr1,futhark-gecko,other,2.605969
+human-gorilla-chr1,futhark-gecko,word sort,17.732113
+human-gorilla-chr1,futhark-gecko,total,42.873698

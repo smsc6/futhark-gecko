@@ -1,0 +1,27 @@
+futhark folder: /home/cgf146/gecko/runs/results/2026-10-19_futhark-gecko-pipeline_mycoplasma-trimmed_anygpu_4115
+cudagecko folder: /home/cgf146/gecko/runs/results/2026-10-19_cudagecko-validation-copy_mycoplasma-trimmed_anygpu_ram-4GB_4115
+== forward strand
+kept hits: futhark 16822, cudagecko 19170
+hits only in futhark: 14638, only in cudagecko: 16958
+first hits only in futhark (x, y): [(24, 230), (56, 262), (119, 325), (120, 326), (152, 358)]
+first hits only in cudagecko (x, y): [(8, 214), (34, 240), (58, 264), (115, 321), (137, 343)]
+hits in both: 2184, of which different offsets: 103
+  hit (24327, 31264): futhark offsets (160, 448), cudagecko offsets (0, 0)
+  hit (27001, 20995): futhark offsets (544, 96), cudagecko offsets (0, 0)
+  hit (56610, 55340): futhark offsets (0, 0), cudagecko offsets (7072, 6144)
+  hit (62696, 61426): futhark offsets (0, 0), cudagecko offsets (13152, 32)
+  hit (78530, 77256): futhark offsets (0, 0), cudagecko offsets (4864, 5376)
+RESULT: DIFFERENT
+== reverse strand
+kept hits: futhark 7046, cudagecko 8103
+hits only in futhark: 6233, only in cudagecko: 7281
+first hits only in futhark (x, y): [(97841, 78176), (97904, 78239), (97941, 78276), (97973, 78308), (98005, 78340)]
+first hits only in cudagecko (x, y): [(97900, 78235), (97955, 78290), (97979, 78314), (98003, 78338), (98026, 78361)]
+hits in both: 813, of which different offsets: 41
+  hit (120964, 551185): futhark offsets (0, 0), cudagecko offsets (992, 2464)
+  hit (122825, 553046): futhark offsets (2880, 608), cudagecko offsets (0, 0)
+  hit (150561, 580764): futhark offsets (2336, 2880), cudagecko offsets (0, 0)
+  hit (151697, 581900): futhark offsets (3456, 1728), cudagecko offsets (0, 0)
+  hit (151747, 581950): futhark offsets (0, 0), cudagecko offsets (3520, 1696)
+RESULT: DIFFERENT
+== Summary: forward FAIL, reverse FAIL

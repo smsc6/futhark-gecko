@@ -1,0 +1,198 @@
+diff -ruN -x .git -x bin -x '*.o' /home/cgf146/gecko/cudagecko/README_validation_copy.md /home/cgf146/gecko/cudagecko-validation-copy/README_validation_copy.md
+--- /home/cgf146/gecko/cudagecko/README_validation_copy.md	1970-01-01 01:00:00.000000000 +0100
++++ /home/cgf146/gecko/cudagecko-validation-copy/README_validation_copy.md	2026-10-19 15:50:25.675749000 +0200
+@@ -0,0 +1,48 @@
++# cudagecko validation copy
++
++Purpose: write cudagecko's intermediate arrays to files, to check futhark-gecko's revcomp.fut, words.fut and sort.fut output against them
++Not for timing: timing runs use the unchanged build in ~/gecko/cudagecko
++
++## Origin
++Copied from ~/gecko/cudagecko on 2026-10-13 with cp -r
++
++## Changes (cuda/gpu_cuda_workflow.cu only)
++1. After line 314 (end of reverse complement): writes the reverse complement of the reference to cudagecko_revcomp_reference.bin (ref_len bytes, one byte per base)
++2. After line 499 in the original numbering (sorted query words copied to CPU): writes all items_read_x sorted query hashes to cudagecko_sorted_query_hashes.bin (uint64, little-endian) and positions to cudagecko_sorted_query_positions.bin (uint32, little-endian)
++Both inserted blocks are marked with the comment "VALIDATION COPY ONLY"
++
++## Build
++Modules: cuda/11.8, gcc/11.2.0
++Command: make gpu_cuda_workflow (in cuda/), built 2026-10-13 22:53 on hendrixgate04fl
++Binary: bin/gpu_cuda_workflow
++
++## Output location
++The .bin files are written to the folder the program runs from
++
++## Changes added 2026-10-14 (forward strand, query vs reference)
++3. After line 921 (sorted hits): copies sorted hits from GPU to the host buffer diagonals and writes n_hits_found uint64 values to cudagecko_sorted_hits_forward.bin
++4. After line 945 in the numbering before change 3 (filter_hits_cpu): writes n_hits_kept uint32 values each to cudagecko_filtered_hits_x_forward.bin and cudagecko_filtered_hits_y_forward.bin
++5. After line 1017 in the numbering before changes 3-4 (offsets copied to CPU): writes n_hits_kept uint32 values each to cudagecko_offsets_left_forward.bin and cudagecko_offsets_right_forward.bin
++Rebuilt 2026-10-14 with make gpu_cuda_workflow (cuda/11.8, gcc/11.2.0)
++
++## Changes added 2026-10-19 (reverse strand, query vs reverse-complemented reference)
++6. After line 1475 (filter_hits_cpu, reverse strand): writes n_hits_kept uint32 values each to cudagecko_filtered_hits_x_reverse.bin and cudagecko_filtered_hits_y_reverse.bin
++7. After line 1544 in the numbering before change 6 (offsets copied to CPU, reverse strand): writes n_hits_kept uint32 values each to cudagecko_offsets_left_reverse.bin and cudagecko_offsets_right_reverse.bin
++Rebuilt 2026-10-19 with make gpu_cuda_workflow (cuda/11.8, gcc/11.2.0)
++
++## Change added 2026-10-19 (kernels.cu, kernel_hits_load_balancing): job-range overlap fixed
++8. Original bug: blocks after G/2 (and queued jobs) computed half-size job starts that overlap the full-size jobs, so a range of sorted query words was processed twice and every hit from those words was written twice (G = 64 x number of SMs, set in gpu_cuda_workflow.cu line 75)
++   Fix: jobs 0 to G/2 keep size B; every later job starts at (G/2 + 1) * B + (job - G/2 - 1) * B/2 with size B/2, so each query word is processed once
++   Both job-range calculations replaced (first job and queued jobs), marked VALIDATION COPY ONLY
++Rebuilt 2026-10-19 13:34 with make gpu_cuda_workflow (cuda/11.8, gcc/11.2.0)
++
++## Change added 2026-10-19 (kernels.cu, kernel_hits_load_balancing): missed-hits fix (bug 3)
++9. Original: in the break branch, word_y_id = current_word_y_id moved the reference start pointer to the current 32-word chunk for the next query word, skipping that word's matches before the chunk boundary
++   Fix: assignment removed (replaced by a VALIDATION COPY ONLY comment); the next query word starts at the earlier pointer and scans forward to its matches
++Rebuilt 2026-10-19 with make gpu_cuda_workflow (cuda/11.8, gcc/11.2.0)
++
++## Change added 2026-10-19 (gpu_cuda_workflow.cu): output files appended per batch, for batched validation
++10. Before: every .bin file opened with "wb", so each batch overwrote the previous one and only the last batch was kept
++   Fix: the 11 .bin files written once per batch (lines 508 to 1559) opened with "ab"; cudagecko_revcomp_reference.bin (line 317, written once) unchanged
++   Each run must use a new, empty output folder, otherwise output is appended to old files
++Rebuilt 2026-10-19 with make gpu_cuda_workflow (cuda/11.8, gcc/11.2.0)
+diff -ruN -x .git -x bin -x '*.o' /home/cgf146/gecko/cudagecko/cuda/gpu_cuda_workflow.cu /home/cgf146/gecko/cudagecko-validation-copy/cuda/gpu_cuda_workflow.cu
+--- /home/cgf146/gecko/cudagecko/cuda/gpu_cuda_workflow.cu	2026-10-01 15:58:32.599978000 +0200
++++ /home/cgf146/gecko/cudagecko-validation-copy/cuda/gpu_cuda_workflow.cu	2026-10-19 15:46:34.787753000 +0200
+@@ -312,6 +312,12 @@
+         if(ret != cudaSuccess){ fprintf(stderr, "Could not copy reference sequence to device for reversing. Error: %d\n", ret); exit(-1); }
+     }
+     ret = cudaDeviceSynchronize();
++    // VALIDATION COPY ONLY: write reverse complement of the reference to a file for comparison with futhark-gecko
++    {
++        FILE * out_revcomp = fopen("cudagecko_revcomp_reference.bin", "wb");
++        fwrite(ref_rev_seq_host, 1, ref_len, out_revcomp);
++        fclose(out_revcomp);
++    }
+ 
+ 
+ #ifdef SHOWTIME
+@@ -497,6 +503,15 @@
+         if(ret != cudaSuccess){ fprintf(stderr, "Downloading device kmers (2). Error: %d\n", ret); exit(-1); }
+ 
+         
++        // VALIDATION COPY ONLY: write sorted query words to files for comparison with futhark-gecko
++        {
++            FILE * out_hashes = fopen("cudagecko_sorted_query_hashes.bin", "ab");
++            fwrite(dict_x_keys, sizeof(uint64_t), items_read_x, out_hashes);
++            fclose(out_hashes);
++            FILE * out_positions = fopen("cudagecko_sorted_query_positions.bin", "ab");
++            fwrite(dict_x_values, sizeof(uint32_t), items_read_x, out_positions);
++            fclose(out_positions);
++        }
+ #ifdef SHOWTIME
+         clock_gettime(CLOCK_MONOTONIC, &HD_end);
+         time_seconds += ( (uint64_t) HD_end.tv_sec - (uint64_t) HD_start.tv_sec ) ;
+@@ -904,6 +919,13 @@
+             time_seconds = 0;
+             time_nanoseconds = 0;
+ #endif 
++            // VALIDATION COPY ONLY: write forward-strand sorted hits for comparison with futhark-gecko
++            {
++                cudaMemcpy(diagonals, ptr_device_diagonals, n_hits_found * sizeof(uint64_t), cudaMemcpyDeviceToHost);
++                FILE * out_hits = fopen("cudagecko_sorted_hits_forward.bin", "ab");
++                fwrite(diagonals, sizeof(uint64_t), n_hits_found, out_hits);
++                fclose(out_hits);
++            }
+ 
+             memset(filtered_hits_x, 0x0000, n_hits_found * sizeof(uint32_t));
+             memset(filtered_hits_y, 0x0000, n_hits_found * sizeof(uint32_t));
+@@ -928,6 +950,15 @@
+ 
+             // We need to download the filtered hits at some point anyway because they contain the positions of the seeds
+             uint32_t n_hits_kept = filter_hits_cpu(diagonals, filtered_hits_x, filtered_hits_y, n_hits_found);
++            // VALIDATION COPY ONLY: write forward-strand filtered hits for comparison with futhark-gecko
++            {
++                FILE * out_fx = fopen("cudagecko_filtered_hits_x_forward.bin", "ab");
++                fwrite(filtered_hits_x, sizeof(uint32_t), n_hits_kept, out_fx);
++                fclose(out_fx);
++                FILE * out_fy = fopen("cudagecko_filtered_hits_y_forward.bin", "ab");
++                fwrite(filtered_hits_y, sizeof(uint32_t), n_hits_kept, out_fy);
++                fclose(out_fy);
++            }
+             
+ 
+ #ifdef SHOWTIME
+@@ -1000,6 +1031,15 @@
+ 
+             ret = cudaMemcpy(host_left_offset, ptr_left_offset, n_hits_kept * sizeof(uint32_t), cudaMemcpyDeviceToHost); if(ret != cudaSuccess){ fprintf(stderr, "Could not copy back left offset. Error: %d\n", ret); exit(-1); }
+             ret = cudaMemcpy(host_right_offset, ptr_right_offset, n_hits_kept * sizeof(uint32_t), cudaMemcpyDeviceToHost); if(ret != cudaSuccess){ fprintf(stderr, "Could not copy back right offset. Error: %d\n", ret); exit(-1); }
++            // VALIDATION COPY ONLY: write forward-strand extension offsets for comparison with futhark-gecko
++            {
++                FILE * out_left = fopen("cudagecko_offsets_left_forward.bin", "ab");
++                fwrite(host_left_offset, sizeof(uint32_t), n_hits_kept, out_left);
++                fclose(out_left);
++                FILE * out_right = fopen("cudagecko_offsets_right_forward.bin", "ab");
++                fwrite(host_right_offset, sizeof(uint32_t), n_hits_kept, out_right);
++                fclose(out_right);
++            }
+             ret = cudaDeviceSynchronize();
+             if(ret != cudaSuccess){ fprintf(stderr, "Error copying offsets back on forward frags. Error: %d -> %s\n", ret, cudaGetErrorString(cudaGetLastError())); exit(-1); }
+ 
+@@ -1433,6 +1473,15 @@
+             if(ret != cudaSuccess){ fprintf(stderr, "Downloading device diagonals on reverse. Error: %d\n", ret); exit(-1); }
+ 
+             uint32_t n_hits_kept = filter_hits_cpu(diagonals, filtered_hits_x, filtered_hits_y, n_hits_found);
++            // VALIDATION COPY ONLY: write reverse-strand filtered hits for comparison with futhark-gecko
++            {
++                FILE * out_fx = fopen("cudagecko_filtered_hits_x_reverse.bin", "ab");
++                fwrite(filtered_hits_x, sizeof(uint32_t), n_hits_kept, out_fx);
++                fclose(out_fx);
++                FILE * out_fy = fopen("cudagecko_filtered_hits_y_reverse.bin", "ab");
++                fwrite(filtered_hits_y, sizeof(uint32_t), n_hits_kept, out_fy);
++                fclose(out_fy);
++            }
+ 
+ 
+ #ifdef SHOWTIME
+@@ -1502,6 +1551,15 @@
+ 
+             ret = cudaMemcpy(host_left_offset, ptr_left_offset, n_hits_kept * sizeof(uint32_t), cudaMemcpyDeviceToHost); if(ret != cudaSuccess){ fprintf(stderr, "Could not copy back left offset. Error: %d\n", ret); exit(-1); }
+             ret = cudaMemcpy(host_right_offset, ptr_right_offset, n_hits_kept * sizeof(uint32_t), cudaMemcpyDeviceToHost); if(ret != cudaSuccess){ fprintf(stderr, "Could not copy back right offset. Error: %d\n", ret); exit(-1); }
++            // VALIDATION COPY ONLY: write reverse-strand extension offsets for comparison with futhark-gecko
++            {
++                FILE * out_left = fopen("cudagecko_offsets_left_reverse.bin", "ab");
++                fwrite(host_left_offset, sizeof(uint32_t), n_hits_kept, out_left);
++                fclose(out_left);
++                FILE * out_right = fopen("cudagecko_offsets_right_reverse.bin", "ab");
++                fwrite(host_right_offset, sizeof(uint32_t), n_hits_kept, out_right);
++                fclose(out_right);
++            }
+ 
+ #ifdef SHOWTIME
+             clock_gettime(CLOCK_MONOTONIC, &HD_end);
+diff -ruN -x .git -x bin -x '*.o' /home/cgf146/gecko/cudagecko/cuda/kernels.cu /home/cgf146/gecko/cudagecko-validation-copy/cuda/kernels.cu
+--- /home/cgf146/gecko/cudagecko/cuda/kernels.cu	2026-10-01 15:58:32.608025000 +0200
++++ /home/cgf146/gecko/cudagecko-validation-copy/cuda/kernels.cu	2026-10-19 13:56:04.531022000 +0200
+@@ -235,8 +235,9 @@
+     uint32_t real_start_x = my_job * batch_size;
+     uint32_t real_limit_x = (my_job + 1) * batch_size;
+     if(blockIdx.x > gridDim.x/2){
+-        real_start_x = my_job * batch_size/2;
+-        real_limit_x = (my_job + 1) * batch_size/2;
++        // VALIDATION COPY ONLY: job ranges fixed so half-size jobs start after the full-size ones (original overlapped)
++        real_start_x = (gridDim.x/2 + 1) * batch_size + (my_job - (gridDim.x/2 + 1)) * (batch_size/2);
++        real_limit_x = real_start_x + batch_size/2;
+     }
+ 
+     //if(blockIdx.x == 0 && threadIdx.x == 0) printf("Batch size is :::::: %u\n", batch_size);
+@@ -328,7 +329,7 @@
+                     {
+                         if(current_word_x < blockDim.x-1 && cached_keys_x[current_word_x+1] > cached_keys_x[current_word_x]
+                             && cached_keys_x[current_word_x+1] >= cached_keys_y[0]){
+-                                word_y_id = current_word_y_id;
++                                // VALIDATION COPY ONLY: bug 3 fix, start pointer not moved here (original skipped matches before a chunk boundary)
+                             }
+                         break;
+                     }
+@@ -354,8 +355,9 @@
+         
+         // Update job index
+         if(my_job > gridDim.x/2){
+-            real_start_x = gridDim.x/2 * batch_size + (my_job-gridDim.x) * batch_size/2;
+-            real_limit_x = gridDim.x/2 * batch_size + ((my_job+1)-gridDim.x) * batch_size/2;
++            // VALIDATION COPY ONLY: same job-range formula as the first job (original overlapped)
++            real_start_x = (gridDim.x/2 + 1) * batch_size + (my_job - (gridDim.x/2 + 1)) * (batch_size/2);
++            real_limit_x = real_start_x + batch_size/2;
+         }else{
+             real_start_x = my_job * batch_size;
+             real_limit_x = (my_job + 1) * batch_size;
