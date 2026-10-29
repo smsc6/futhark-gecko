@@ -25,9 +25,9 @@ The summaries from the report's own runs are in `results/`.
 
 | Path | Contents |
 |---|---|
-| `revcomp.fut`, `words.fut`, `sort.fut`, `hits.fut`, `filter.fut`, `extend.fut` | one file per pipeline stage |
-| `gecko.fut` | full pipeline; entry points `gecko` (one batch) and `gecko_batched` |
-| `futhark.pkg`, `lib/` | Futhark packages (`sorts`, `segmented`) |
+| `futhark/` | Futhark implementation: `revcomp.fut`, `words.fut`, `sort.fut`, `hits.fut`, `filter.fut`, `extend.fut`, one file per stage | one file per pipeline stage |
+| `futhark/gecko.fut` | full pipeline; entry points `gecko` (one batch) and `gecko_batched` |
+| `futhark/futhark.pkg`, `futhark/lib/` | Futhark packages (`sorts`, `segmented`) |
 | `tools/` | input preparation, comparison with cudagecko, result summaries |
 | `patches/` | cudagecko changes: bug-fixed build (bugs 2 and 3) and validation copy (writes intermediate arrays) |
 | `runs/scripts/` | the exact SLURM scripts of the jobs reported |

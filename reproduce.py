@@ -109,7 +109,7 @@ PY
   python3 {REPO}/tools/fasta_to_futhark.py trimmed/$s.trimmed-batch1999583.fasta futhark-input/$s.trimmed-batch1999583.in
 done
 mkdir -p {ROOT}/builds/futhark-gecko-cuda
-cd {REPO} && futhark pkg sync && futhark cuda -o {ROOT}/builds/futhark-gecko-cuda/gecko gecko.fut
+cd {REPO}/futhark && futhark pkg sync && futhark cuda -o {ROOT}/builds/futhark-gecko-cuda/gecko gecko.fut
 for v in cudagecko cudagecko-bugfixed cudagecko-validation-copy; do make all -C {ROOT}/$v/cuda; done
 """)
 prep_id = sbatch(prep)
