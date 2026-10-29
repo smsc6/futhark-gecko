@@ -1,11 +1,8 @@
+# Futhark build output
 *.c
 *.h
 *.actual
 *.expected
-data/
-*.fasta
-*.fa
-
 revcomp
 words
 sort
@@ -14,11 +11,13 @@ filter
 extend
 gecko
 
-\?/
-.scala-build/benchmarks/
+# Input sequences
+data/
+*.fasta
+*.fa
 
-# Futhark build outpu
-*.actual
-*.expected
- 
+# Scala build output
+.scala-build/
+
+# Personal notes
 NOTES.md
