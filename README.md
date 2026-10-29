@@ -2,16 +2,19 @@
 
 A Futhark implementation of GECKO, a seed-and-extend DNA sequence comparison algorithm, benchmarked against [cudagecko](https://github.com/estebanpw/cudagecko), its hand-written CUDA implementation (Perez-Wohlfeil et al., 2023). Developed by Sabrina Schum as an MSc project at DIKU, University of Copenhagen (2026).
 
-
 ## Results
 
 All numbers come from the files in `results/`, measured on NVIDIA A100 GPUs.
 
-**Correctness.** Futhark's output is identical to the cudagecko validation copy's on both strands for Mycoplasma, E. coli, and E. coli split into batches (jobs 4225, 4234 and 4430).
+### Correctness
 
-**End-to-end runtime** (mean of 10 timed runs, job 8787):
+Futhark's output is identical to the cudagecko validation copy's on both strands for Mycoplasma, E. coli, and E. coli split into batches (jobs 4225, 4234 and 4430).
 
-| Sequence pair | Futhark (s) | cudagecko, original (s) | cudagecko, bug-fixed (s) | Futhark / original |
+### End-to-end runtime
+
+Mean of 10 timed runs, job 8787:
+
+| Sequence pair | Futhark (s) | cudagecko (s) | cudagecko, bug-fixed (s) | Futhark / cudagecko |
 |---|---|---|---|---|
 | Mycoplasma | 0.026 | 0.021 | 0.021 | 1.24 |
 | E. coli | 0.108 | 0.077 | 0.078 | 1.41 |
@@ -23,10 +26,11 @@ All numbers come from the files in `results/`, measured on NVIDIA A100 GPUs.
 
 Futhark's time is the executable's own runtime measurement, which excludes copying input to the GPU and results back. cudagecko's time is the sum of its built-in stage timers, which include data copies and exclude its final CPU filtering step. `benchmarks/PROTOCOL.md` describes both methods.
 
-**GPU kernel time per stage** (job 5677):
+### GPU kernel time per stage
+
+Measured with the NVIDIA Nsight Systems profiler (nsys), job 5677:
 - Sorting (word sort and hit sort) accounts for 74–92% of Futhark's kernel time on all 7 pairs.
 - Hit generation is cudagecko's largest stage on the 5 largest pairs.
-
 
 ## Requirements
 
@@ -63,7 +67,7 @@ python3 tools/fasta_to_futhark.py query.trimmed.fasta query.in
 python3 tools/trim_for_full_blocks.py ref.fasta ref.trimmed.fasta
 python3 tools/fasta_to_futhark.py ref.trimmed.fasta ref.in
 
-# Futhark: batch size in words, followed by the query and reference sequences
+# # Futhark: batch size in bases, followed by the query and reference sequences
 mkdir -p futhark_out
 ( echo 32459520i64; cat query.in ref.in ) | futhark/gecko -e gecko_batched -b > futhark_out/futhark_pipeline_output.bin
 
@@ -100,11 +104,13 @@ python3 futhark-gecko/reproduce.py ~/gecko
 
 Time limits from the job scripts are 15 minutes per validation job, 6 hours for the benchmark job and 45 minutes for the profiling job.
 
-| Experiment | SLURM script | Summary script | Output |
-|---|---|---|---|
-| Validation: Futhark output compared element by element with the cudagecko validation copy (Mycoplasma, E. coli, batched E. coli) | `runs/scripts/*job_4225*`, `*job_4234*`, `*job_4430*` | `tools/compare_pipeline_with_cudagecko.py`, called in each job | `runs/results/*_pipeline_comparison_*_<job>.txt` |
-| End-to-end runtime of Futhark, original cudagecko and bug-fixed cudagecko, and cudagecko's hit count before filtering; 7 sequence pairs, 10 timed runs each | `runs/scripts/*job_8787*` | `tools/summarize_end_to_end_benchmark.py` | `runs/results/benchmark-end-to-end-summary_<job>.csv` |
-| GPU kernel time per pipeline stage, measured with the NVIDIA Nsight Systems profiler (nsys); 7 sequence pairs | `runs/scripts/*job_5677*` | `tools/summarize_kernel_stages.py` | `runs/results/kernel-stage-summary_<job>.csv` |
+| Experiment | SLURM script | Output |
+|---|---|---|
+| Validation | `*job_4225*`, `*job_4234*`, `*job_4430*` | `*_pipeline_comparison_*_<job>.txt` |
+| End-to-end runtime | `*job_8787*` | `benchmark-end-to-end-summary_<job>.csv` |
+| Kernel time per stage | `*job_5677*` | `kernel-stage-summary_<job>.csv` |
+
+SLURM scripts are in `runs/scripts/`, and outputs are written to `runs/results/`. The validation jobs run `tools/compare_pipeline_with_cudagecko.py`. The summary job runs `tools/summarize_end_to_end_benchmark.py` and `tools/summarize_kernel_stages.py`.
 
 `results/` contains the benchmark summary, the kernel-stage summary and the validation comparison files from the original runs. Each file name ends with the SLURM job number, except one early Mycoplasma comparison file.
 
@@ -145,4 +151,4 @@ GPL-3.0, the license of cudagecko, which the files in `patches/` modify. The pac
 
 ## Citation
 
-Perez-Wohlfeil, E., Trelles, O., Guil, N. (2023). Irregular alignment of arbitrarily long DNA sequences on GPU. *The Journal of Supercomputing* 79(8), 8699–8728. https://doi.org/10.1007/s11227-022-05007-z
+Perez-Wohlfeil, E., Trelles, O., Guil, N. (2023). Irregular alignment of arbitrarily long DNA sequences on GPU. *The Journal of Supercomputing* 79(8), 8699–8728. https://doi.org/10.1007/s11227-022-05007-zl
