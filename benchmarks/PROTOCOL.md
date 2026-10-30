@@ -56,10 +56,10 @@ Futhark output for each stage must match cudagecko output on the same input befo
 - Results: `<date>_<program>_<dataset>_<gpu>_<settings>_<jobID>.csv`
 - Run records: `~/gecko/runs/README.md`
 
-## Open decisions
+## Benchmarking decisions
 - GPU type (decided): A100 (NVIDIA A100-PCIE-40GB in job 4454), all runs in one SLURM job
 - Timing scope (decided): cudagecko = sum of its built-in stage timers, filterFrags (CPU step) excluded, data copies included (tools/sum_cudagecko_stage_times.py); Futhark = executable -t time, which excludes copying input to the GPU and results back (gecko.c generated code: futhark_new_u8_1d and sync before t_start, results read after t_end) and includes the whole GPU pipeline and all batches; report both scopes, per supervisor
-- Difference to report: Futhark keeps all batches on the GPU; cudagecko copies data between CPU and GPU in every batch
+- Implementation Difference: Futhark keeps all batches on the GPU; cudagecko copies data between CPU and GPU in every batch
 
 ## cudagecko built-in timers (from `cuda/gpu_cuda_workflow.cu`, SHOWTIME)
 The `t=` stage times include data copying, not only GPU computation:
