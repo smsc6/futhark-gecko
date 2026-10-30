@@ -2,7 +2,7 @@
 """Compare two DNA sequences with futhark-gecko and write the alignments as CSV.
 
 Usage:
-  python3 run_gecko.py QUERY.fasta REFERENCE.fasta -o OUTDIR [options]
+  python3 run_futhark_gecko.py QUERY.fasta REFERENCE.fasta -o OUTDIR [options]
 
 On a SLURM login node the script submits itself as a one-GPU job and returns.
 Inside a SLURM job, or with --local, it runs directly:
