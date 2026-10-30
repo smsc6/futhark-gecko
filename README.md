@@ -38,71 +38,57 @@ Measured with the NVIDIA Nsight Systems profiler (nsys), job 5677:
 - Modules `cuda/11.8`, `gcc/11.2.0`, `futhark/0.25.8`
 - Python 3 (standard library only)
 
-## Build
+## Usage
 
-Run the Build, Compare and Validate commands inside a SLURM job with one GPU, not on a login node:
+```bash
+python3 run_gecko.py query.fasta reference.fasta -o results
+```
+
+On a SLURM login node, `run_gecko.py` submits itself as a one-GPU job, loads the modules above and returns the job number. Inside a SLURM job, or with `--local`, it runs directly. The first run compiles `futhark/gecko.fut` into `build/<backend>/gecko`; later runs reuse the build until a `.fut` file changes.
+
+| Option | Default | Effect |
+|---|---|---|
+| `--batch-size` | 32459520 | Bases per batch; 32459520 fits a 40 GB GPU |
+| `--min-length` | 0 | Write only alignments of at least this many bases |
+| `--backend` | `cuda` | Futhark backend: `cuda`, `opencl`, `multicore` or `c` |
+| `--local` | off | Run here instead of submitting a SLURM job |
+| `--partition`, `--time`, `--mem` | `gpu`, `06:00:00`, `32G` | SLURM job settings |
+| `--modules` | `cuda/11.8 gcc/11.2.0 futhark/0.25.8` | Modules loaded in the SLURM job; `""` for none |
+
+Output in the `-o` folder:
+
+| File | Contents |
+|---|---|
+| `alignments.csv` | One row per ungapped alignment: `strand`, `query_start`, `query_end`, `ref_start`, `ref_end`, `length`. Positions are 0-based with exclusive ends; reference positions are on the forward strand for both strands |
+| `futhark_pipeline_output.bin` | Raw output: query positions, reference positions, left offsets and right offsets of the kept hits, forward strand then reverse strand, in Futhark's binary format |
+| `runtime_microseconds.txt` | Pipeline runtime measured by the Futhark executable, excluding input and output copies |
+| `gecko_<job>.log` | SLURM log, when submitted as a job |
+
+## Validate against cudagecko
+
+Build cudagecko at revision d473f03 with the validation patch. The validation copy has bugs 2 and 3 fixed (see cudagecko bugs below) and writes its intermediate arrays to the folder it runs from. It appends to these files once per batch, so each run needs a new, empty folder. Trim both inputs (see Notes), then run both programs inside a SLURM job with one GPU and compare their outputs element by element:
 
 ```bash
 srun --partition=gpu --gres=gpu:1 --pty bash
 module unload cuda && module load cuda/11.8 gcc/11.2.0 futhark/0.25.8
-```
 
-```bash
-# Futhark implementation
-cd futhark && futhark pkg sync && futhark cuda -o gecko gecko.fut && cd ..
-
-# cudagecko at revision d473f03: original, bug-fixed build and validation copy
 git clone https://github.com/estebanpw/cudagecko.git && git -C cudagecko checkout d473f03
-cp -r cudagecko cudagecko-bugfixed && patch -p5 -d cudagecko-bugfixed < patches/cudagecko-bugfixed.patch
 cp -r cudagecko cudagecko-validation-copy && patch -p5 -d cudagecko-validation-copy < patches/cudagecko-validation-copy.patch
-for v in cudagecko cudagecko-bugfixed cudagecko-validation-copy; do make all -C $v/cuda; done
-```
+make all -C cudagecko-validation-copy/cuda
 
-## Compare two sequences
-
-```bash
-# Trim each sequence (see Notes) and convert it to Futhark's input format
 python3 tools/trim_for_full_blocks.py query.fasta query.trimmed.fasta
-python3 tools/fasta_to_futhark.py query.trimmed.fasta query.in
 python3 tools/trim_for_full_blocks.py ref.fasta ref.trimmed.fasta
-python3 tools/fasta_to_futhark.py ref.trimmed.fasta ref.in
+python3 run_gecko.py query.trimmed.fasta ref.trimmed.fasta -o futhark_out --local
 
-# # Futhark: batch size in bases, followed by the query and reference sequences
-mkdir -p futhark_out
-( echo 32459520i64; cat query.in ref.in ) | futhark/gecko -e gecko_batched -b > futhark_out/futhark_pipeline_output.bin
-
-# cudagecko, with the memory limit that gives the same batch size
-cudagecko/bin/gpu_cuda_workflow -query query.trimmed.fasta -ref ref.trimmed.fasta -dev 0 -ram 4000000000
-```
-
-`futhark_pipeline_output.bin` contains eight arrays in Futhark's binary format: query positions, reference positions, left offsets and right offsets of the kept hits on the forward strand, followed by the same four arrays for the reverse strand.
-
-## Validate against cudagecko
-
-The validation copy of cudagecko has bugs 2 and 3 fixed (see cudagecko bugs below) and writes its intermediate arrays to the folder it runs from. It appends to these files once per batch, so each run needs a new, empty folder. Run it on the same inputs and compare both outputs element by element:
-
-```bash
 mkdir cudagecko_out && cd cudagecko_out
 ../cudagecko-validation-copy/bin/gpu_cuda_workflow -query ../query.trimmed.fasta -ref ../ref.trimmed.fasta -dev 0 -ram 4000000000
 cd ..
 python3 tools/compare_pipeline_with_cudagecko.py futhark_out cudagecko_out
 ```
 
-## Reproduce all results
+The bug-fixed build used in the benchmarks is made the same way with `patches/cudagecko-bugfixed.patch`.
 
-Run on a login node. `reproduce.py` only downloads data and submits jobs; all computation runs inside SLURM jobs.
-
-```bash
-git clone -b main https://github.com/smsc6/futhark-gecko.git
-python3 futhark-gecko/reproduce.py ~/gecko
-```
-
-`reproduce.py` downloads the 14 sequences from NCBI RefSeq and Ensembl, then submits jobs to SLURM in dependency order:
-1. A preparation job trims and converts the inputs and builds all programs.
-2. The validation, benchmark and profiling jobs start after the preparation job succeeds.
-3. A summary job runs after the benchmark and profiling jobs finish.
-
-Time limits from the job scripts are 15 minutes per validation job, 6 hours for the benchmark job and 45 minutes for the profiling job.
+## Experiments
 
 | Experiment | SLURM script | Output |
 |---|---|---|
@@ -110,9 +96,7 @@ Time limits from the job scripts are 15 minutes per validation job, 6 hours for 
 | End-to-end runtime | `*job_8787*` | `benchmark-end-to-end-summary_<job>.csv` |
 | Kernel time per stage | `*job_5677*` | `kernel-stage-summary_<job>.csv` |
 
-SLURM scripts are in `runs/scripts/`, and outputs are written to `runs/results/`. The validation jobs run `tools/compare_pipeline_with_cudagecko.py`. The summary job runs `tools/summarize_end_to_end_benchmark.py` and `tools/summarize_kernel_stages.py`.
-
-`results/` contains the benchmark summary, the kernel-stage summary and the validation comparison files from the original runs. Each file name ends with the SLURM job number, except one early Mycoplasma comparison file.
+The SLURM scripts in `runs/scripts/` are the scripts of the original runs, with their original absolute paths. The validation jobs run `tools/compare_pipeline_with_cudagecko.py`. The benchmark and profile summaries come from `tools/summarize_end_to_end_benchmark.py` and `tools/summarize_kernel_stages.py`. `results/` contains the outputs of the original runs. Each file name ends with the SLURM job number, except one early Mycoplasma comparison file.
 
 ## cudagecko bugs
 
@@ -137,7 +121,7 @@ Three bugs in cudagecko d473f03 were found while validating the Futhark implemen
 | `results/` | Benchmark, profile and validation summaries from the original runs |
 | `benchmarks/PROTOCOL.md` | Benchmark protocol and design decisions |
 | `prototypes/scala/` | Scala prototype of the hits and extend stages, written before the Futhark version (not used for results) |
-| `reproduce.py` | Runs all experiments |
+| `run_gecko.py` | Compares two FASTA files and writes the alignments |
 
 ## Notes
 
@@ -151,4 +135,4 @@ GPL-3.0, the license of cudagecko, which the files in `patches/` modify. The pac
 
 ## Citation
 
-Perez-Wohlfeil, E., Trelles, O., Guil, N. (2023). Irregular alignment of arbitrarily long DNA sequences on GPU. *The Journal of Supercomputing* 79(8), 8699–8728. https://doi.org/10.1007/s11227-022-05007-zl
+Perez-Wohlfeil, E., Trelles, O., Guil, N. (2023). Irregular alignment of arbitrarily long DNA sequences on GPU. *The Journal of Supercomputing* 79(8), 8699–8728. https://doi.org/10.1007/s11227-022-05007-z
