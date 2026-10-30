@@ -41,10 +41,10 @@ Measured with the NVIDIA Nsight Systems profiler (nsys), job 5677:
 ## Usage
 
 ```bash
-python3 run_gecko.py query.fasta reference.fasta -o results
+python3 run_futhark_gecko.py query.fasta reference.fasta -o results
 ```
 
-On a SLURM login node, `run_gecko.py` submits itself as a one-GPU job, loads the modules above and returns the job number. Inside a SLURM job, or with `--local`, it runs directly. The first run compiles `futhark/gecko.fut` into `build/<backend>/gecko`; later runs reuse the build until a `.fut` file changes.
+On a SLURM login node, `run_futhark_gecko.py` submits itself as a one-GPU job, loads the modules above and returns the job number. Inside a SLURM job, or with `--local`, it runs directly. The first run compiles `futhark/gecko.fut` into `build/<backend>/gecko`; later runs reuse the build until a `.fut` file changes.
 
 | Option | Default | Effect |
 |---|---|---|
@@ -78,7 +78,7 @@ make all -C cudagecko-validation-copy/cuda
 
 python3 tools/trim_for_full_blocks.py query.fasta query.trimmed.fasta
 python3 tools/trim_for_full_blocks.py ref.fasta ref.trimmed.fasta
-python3 run_gecko.py query.trimmed.fasta ref.trimmed.fasta -o futhark_out --local
+python3 run_futhark_gecko.py query.trimmed.fasta ref.trimmed.fasta -o futhark_out --local
 
 mkdir cudagecko_out && cd cudagecko_out
 ../cudagecko-validation-copy/bin/gpu_cuda_workflow -query ../query.trimmed.fasta -ref ../ref.trimmed.fasta -dev 0 -ram 4000000000
@@ -121,7 +121,7 @@ Three bugs in cudagecko d473f03 were found while validating the Futhark implemen
 | `results/` | Benchmark, profile and validation summaries from the original runs |
 | `benchmarks/PROTOCOL.md` | Benchmark protocol and design decisions |
 | `prototypes/scala/` | Scala prototype of the hits and extend stages, written before the Futhark version (not used for results) |
-| `run_gecko.py` | Compares two FASTA files and writes the alignments |
+| `run_futhark_gecko.py` | Compares two FASTA files and writes the alignments |
 
 ## Notes
 
